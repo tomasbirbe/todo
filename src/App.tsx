@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState } from "react";
+import React, { ChangeEvent, useRef, useState } from "react";
 import { v4 } from "uuid";
 
 interface Task {
@@ -10,6 +10,8 @@ interface Task {
 function App() {
   const [newTask, setNewTask] = useState<string>("");
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  const [editInput, setEditInput] = useState<string>("");
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -23,7 +25,7 @@ function App() {
   }
 
   function handleCheck(task: Task) {
-    const updatedTask = tasks.map((a: Task) => {
+    const updatedTasks = tasks.map((a: Task) => {
       if (task.id === a.id) {
         a.isDone = !a.isDone;
       }
@@ -31,7 +33,21 @@ function App() {
       return a;
     });
 
-    setTasks(updatedTask);
+    setTasks(updatedTasks);
+  }
+
+  function handleDelete(task: Task) {
+    const updatedTasks = tasks.filter((taskItem: Task) => taskItem.id !== task.id);
+
+    setTasks(updatedTasks);
+  }
+
+  function handleEdit(task: Task) {
+    setTaskToEdit(task);
+  }
+
+  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setEditInput(event.target.value);
   }
 
   return (
@@ -39,6 +55,7 @@ function App() {
       <div className="pt-4 flex flex-col gap-4">
         <form className="flex gap-5" onSubmit={handleSubmit}>
           <input
+            required
             className="border border-black p-2 rounded-md"
             placeholder="Creá una nueva tarea"
             type="text"
@@ -52,8 +69,19 @@ function App() {
         <ul>
           {tasks.map((task) => (
             <div key={task.id} className="flex items-center justify-between px-2">
-              <li className={`${task.isDone ? "line-through" : ""}`}>{task.content}</li>
-              <input type="checkbox" onChange={() => handleCheck(task)} />
+              {taskToEdit?.id !== task.id ? (
+                <li className={`${task.isDone ? "line-through text-gray-900/40" : ""}`}>
+                  {task.content}
+                </li>
+              ) : (
+                <input defaultValue={task.content} onChange={handleChange} />
+              )}
+
+              <div className="flex gap-8 ">
+                <input type="checkbox" onChange={() => handleCheck(task)} />
+                <button onClick={() => handleEdit(task)}>edit</button>
+                <button onClick={() => handleDelete(task)}>x</button>
+              </div>
             </div>
           ))}
         </ul>
